@@ -7,8 +7,6 @@ import {
   onSnapshot,
 } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
-console.log('[todo-list-app] app.js loaded');
-
 // DOM references (populated after DOMContentLoaded)
 let addTaskBtn;
 let addListBtn;
@@ -175,7 +173,6 @@ function renderTasks() {
   currentListName.textContent = list.name;
   taskListTitle.textContent = list.name;
 
-  // Ensure we have a reference to the task list element (fallback if it wasn't initialized)
   const taskListElement = taskListEl || document.getElementById('taskList');
   if (!taskListElement) return;
 
