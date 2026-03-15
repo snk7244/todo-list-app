@@ -6,10 +6,40 @@
   box-sizing: border-box;
 }
 
+:root {
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --surface-2: #1c1c1e;
+  --border: #2c2c2e;
+  --text: #ffffff;
+  --muted: #8e8e93;
+  --hover: rgba(255, 255, 255, 0.08);
+  --hover-strong: rgba(255, 255, 255, 0.12);
+  --icon-surface: rgba(255, 255, 255, 0.08);
+  --checkbox-border: #48484a;
+  --accent: #007aff;
+  --danger: #ff3b30;
+}
+
+body[data-theme='light'] {
+  --bg: #f3f4f8;
+  --surface: #ffffff;
+  --surface-2: #f7f7fb;
+  --border: #d9dbe3;
+  --text: #101218;
+  --muted: #5f6470;
+  --hover: rgba(15, 23, 42, 0.06);
+  --hover-strong: rgba(15, 23, 42, 0.1);
+  --icon-surface: rgba(15, 23, 42, 0.06);
+  --checkbox-border: #8a90a0;
+  --accent: #007aff;
+  --danger: #d92d20;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  background-color: #000000;
-  color: #ffffff;
+  background-color: var(--bg);
+  color: var(--text);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -21,13 +51,13 @@ body {
   max-width: 900px;
   margin: 0 auto;
   min-height: 100vh;
-  background-color: #000000;
+  background-color: var(--bg);
   position: relative;
 }
 
 .sidebar {
-  background-color: #0a0a0a;
-  border-right: 1px solid #2c2c2e;
+  background-color: var(--surface);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
 }
@@ -37,7 +67,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #2c2c2e;
+  border-bottom: 1px solid var(--border);
 }
 
 .sidebar-title {
@@ -63,17 +93,17 @@ body {
   align-items: center;
   padding: 12px 20px;
   cursor: pointer;
-  border-bottom: 1px solid #2c2c2e;
-  color: #ffffff;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
   gap: 10px;
 }
 
 .list-item.selected {
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: var(--hover-strong);
 }
 
 .list-item:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--hover);
 }
 
 .list-icon {
@@ -82,7 +112,7 @@ body {
   border-radius: 8px;
   display: grid;
   place-items: center;
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--icon-surface);
   flex-shrink: 0;
 }
 
@@ -97,7 +127,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #2c2c2e;
+  border-bottom: 1px solid var(--border);
 }
 
 .header-left {
@@ -113,7 +143,7 @@ body {
 .main-header h1 {
   font-size: 30px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text);
 }
 
 .header-right {
@@ -125,7 +155,7 @@ body {
 .icon-btn {
   background: none;
   border: none;
-  color: #ffffff;
+  color: var(--text);
   font-size: 20px;
   cursor: pointer;
   padding: 10px;
@@ -136,7 +166,11 @@ body {
 }
 
 .icon-btn:hover {
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: var(--hover-strong);
+}
+
+.theme-btn {
+  font-size: 18px;
 }
 
 .list-header {
@@ -144,17 +178,17 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 14px 0;
-  border-bottom: 1px solid #2c2c2e;
+  border-bottom: 1px solid var(--border);
 }
 
 .list-header h2 {
   font-size: 22px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text);
 }
 
 .task-count {
-  color: #8e8e93;
+  color: var(--muted);
   font-size: 16px;
   font-weight: 400;
 }
@@ -170,7 +204,7 @@ body {
   display: flex;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid #2c2c2e;
+  border-bottom: 1px solid var(--border);
   transition: background-color 0.2s;
 }
 
@@ -179,7 +213,7 @@ body {
 }
 
 .task-item:hover {
-  background-color: #1c1c1e;
+  background-color: var(--hover);
 }
 
 .task-checkbox {
@@ -187,7 +221,7 @@ body {
   appearance: none;
   width: 24px;
   height: 24px;
-  border: 2px solid #48484a;
+  border: 2px solid var(--checkbox-border);
   border-radius: 50%;
   margin-right: 16px;
   cursor: pointer;
@@ -197,8 +231,8 @@ body {
 }
 
 .task-checkbox:checked {
-  background-color: #007aff;
-  border-color: #007aff;
+  background-color: var(--accent);
+  border-color: var(--accent);
 }
 
 .task-checkbox:checked::after {
@@ -216,13 +250,13 @@ body {
   flex: 1;
   font-size: 17px;
   line-height: 1.4;
-  color: #ffffff;
+  color: var(--text);
   padding-right: 12px;
 }
 
 .task-item.completed .task-text {
   text-decoration: line-through;
-  color: #8e8e93;
+  color: var(--muted);
 }
 
 .task-actions {
@@ -235,7 +269,7 @@ body {
 .action-btn {
   background: none;
   border: none;
-  color: #8e8e93;
+  color: var(--muted);
   font-size: 18px;
   cursor: pointer;
   padding: 8px;
@@ -244,15 +278,15 @@ body {
 }
 
 .action-btn:hover {
-  background-color: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  background-color: var(--hover-strong);
+  color: var(--text);
 }
 
 .move-select {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: var(--icon-surface);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  color: #ffffff;
+  color: var(--text);
   padding: 4px 8px;
   font-size: 14px;
   outline: none;
@@ -261,7 +295,7 @@ body {
 .delete-btn {
   background: none;
   border: none;
-  color: #ff3b30;
+  color: var(--danger);
   font-size: 16px;
   cursor: pointer;
   padding: 8px;
@@ -284,9 +318,9 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: #1c1c1e;
+  background-color: var(--surface-2);
   padding: 16px 20px;
-  border-top: 1px solid #2c2c2e;
+  border-top: 1px solid var(--border);
   max-width: 900px;
   margin: 0 auto;
 }
@@ -295,7 +329,7 @@ body {
   width: 100%;
   background: none;
   border: none;
-  color: #ffffff;
+  color: var(--text);
   font-size: 17px;
   padding: 12px 0;
   outline: none;
@@ -304,11 +338,11 @@ body {
 }
 
 #taskInput::placeholder {
-  color: #8e8e93;
+  color: var(--muted);
 }
 
 #taskInput:focus {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--hover);
   border-radius: 8px;
   padding: 12px 16px;
   margin: -4px 0;
@@ -320,16 +354,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #000000;
+  background: var(--bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #48484a;
+  background: var(--checkbox-border);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #636366;
+  background: var(--muted);
 }
 
 /* Responsive adjustments */

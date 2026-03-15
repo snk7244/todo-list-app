@@ -16,9 +16,11 @@ let taskListEl;
 let currentListName;
 let taskListTitle;
 let taskCount;
+let themeToggleBtn;
 
 const db = window.db; // From HTML
 const STORAGE_KEY = 'todoState';
+const THEME_KEY = 'themePreference';
 
 let state = {
   lists: [],
@@ -37,6 +39,9 @@ async function init() {
   currentListName = document.getElementById('currentListName');
   taskListTitle = document.getElementById('taskListTitle');
   taskCount = document.getElementById('taskCount');
+  themeToggleBtn = document.getElementById('themeToggleBtn');
+
+  initTheme();
 
   await loadState();
 
@@ -74,6 +79,15 @@ function setupRealtimeListener() {
 }
 
 function attachEvents() {
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+      const isDark = document.body.dataset.theme !== 'light';
+      const nextTheme = isDark ? 'light' : 'dark';
+      applyTheme(nextTheme);
+      localStorage.setItem(THEME_KEY, nextTheme);
+    });
+  }
+
   addTaskBtn.addEventListener('click', () => taskInput.focus());
 
   addListBtn.addEventListener('click', () => {
@@ -406,6 +420,22 @@ async function loadState() {
 
 function generateId() {
   return 'id-' + Math.random().toString(16).slice(2) + Date.now();
+}
+
+function initTheme() {
+  const savedTheme = localStorage.getItem(THEME_KEY);
+  const preferredTheme = savedTheme || 'dark';
+  applyTheme(preferredTheme);
+}
+
+function applyTheme(theme) {
+  const normalizedTheme = theme === 'light' ? 'light' : 'dark';
+  document.body.dataset.theme = normalizedTheme;
+
+  if (themeToggleBtn) {
+    themeToggleBtn.textContent = normalizedTheme === 'dark' ? '☀️' : '🌙';
+    themeToggleBtn.title = normalizedTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+  }
 }
 
 // Start the app
