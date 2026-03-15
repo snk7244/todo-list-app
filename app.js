@@ -7,6 +7,8 @@ import {
   onSnapshot,
 } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
+console.log('[todo-list-app] app.js loaded');
+
 // DOM references (populated after DOMContentLoaded)
 let addTaskBtn;
 let addListBtn;
