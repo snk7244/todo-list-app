@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reminders</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <aside class="sidebar">
+        <header class="sidebar-header">
+          <div class="sidebar-title">
+            <span class="sidebar-icon">🗂️</span>
+            <h2>Lists</h2>
+          </div>
+          <button class="icon-btn add-list-btn" id="addListBtn" title="Add List">＋</button>
+        </header>
+        <ul id="listContainer" class="list-container"></ul>
+      </aside>
+
+      <main class="main-content">
+        <header class="main-header">
+          <div class="header-left">
+            <div class="app-icon">📝</div>
+            <h1 id="currentListName">Reminders</h1>
+          </div>
+          <div class="header-right">
+            <button class="icon-btn add-task-btn" id="addTaskBtn" title="New Reminder">＋</button>
+            <button class="icon-btn search-btn">🔍</button>
+          </div>
+        </header>
+
+        <div class="list-header">
+          <h2 id="taskListTitle">All</h2>
+          <span class="task-count" id="taskCount">0</span>
+        </div>
+
+        <ul id="taskList" class="task-list"></ul>
+      </main>
+
+      <div class="new-reminder">
+        <input type="text" id="taskInput" placeholder="New Reminder" />
+      </div>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
