@@ -45,15 +45,19 @@
             <h1 id="currentListName">Reminders</h1>
           </div>
           <div class="header-right">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search" aria-label="Search reminders" />
             <button class="icon-btn theme-btn" id="themeToggleBtn" title="Toggle Theme">☀️</button>
             <button class="icon-btn add-task-btn" id="addTaskBtn" title="New Reminder">＋</button>
-            <button class="icon-btn search-btn">🔍</button>
+            <button class="icon-btn search-btn" id="searchBtn" title="Search Reminders">🔍</button>
           </div>
         </header>
 
         <div class="list-header">
           <h2 id="taskListTitle">All</h2>
-          <span class="task-count" id="taskCount">0</span>
+          <div class="list-header-actions">
+            <span class="task-count" id="taskCount">0</span>
+            <button class="clear-completed-btn" id="clearCompletedBtn" title="Remove completed tasks">Clear Done</button>
+          </div>
         </div>
 
         <ul id="taskList" class="task-list"></ul>

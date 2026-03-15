@@ -17,6 +17,9 @@ let currentListName;
 let taskListTitle;
 let taskCount;
 let themeToggleBtn;
+let searchBtn;
+let searchInput;
+let clearCompletedBtn;
 
 const db = window.db; // From HTML
 const STORAGE_KEY = 'todoState';
@@ -26,6 +29,8 @@ let state = {
   lists: [],
   selectedListId: null,
 };
+
+let searchQuery = '';
 
 let unsubscribe = null; // For real-time listener
 
@@ -40,8 +45,12 @@ async function init() {
   taskListTitle = document.getElementById('taskListTitle');
   taskCount = document.getElementById('taskCount');
   themeToggleBtn = document.getElementById('themeToggleBtn');
+  searchBtn = document.getElementById('searchBtn');
+  searchInput = document.getElementById('searchInput');
+  clearCompletedBtn = document.getElementById('clearCompletedBtn');
 
   initTheme();
+  attachThemeEvent();
 
   await loadState();
 
@@ -65,7 +74,20 @@ async function init() {
   setupRealtimeListener();
 }
 
+function attachThemeEvent() {
+  if (!themeToggleBtn) return;
+
+  themeToggleBtn.addEventListener('click', () => {
+    const isDark = document.body.dataset.theme !== 'light';
+    const nextTheme = isDark ? 'light' : 'dark';
+    applyTheme(nextTheme);
+    localStorage.setItem(THEME_KEY, nextTheme);
+  });
+}
+
 function setupRealtimeListener() {
+  if (!db) return;
+
   if (unsubscribe) unsubscribe();
   const userDoc = doc(db, 'users', 'defaultUser'); // Use a fixed user ID for simplicity
   unsubscribe = onSnapshot(userDoc, (docSnap) => {
@@ -79,21 +101,70 @@ function setupRealtimeListener() {
 }
 
 function attachEvents() {
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener('click', () => {
-      const isDark = document.body.dataset.theme !== 'light';
-      const nextTheme = isDark ? 'light' : 'dark';
-      applyTheme(nextTheme);
-      localStorage.setItem(THEME_KEY, nextTheme);
+  if (!addTaskBtn || !addListBtn || !taskInput) {
+    console.warn('UI elements not found; skipping event binding.');
+    return;
+  }
+
+  if (searchBtn) {
+    searchBtn.addEventListener('click', () => {
+      if (!searchInput) return;
+
+      const isActive = searchInput.classList.contains('active');
+      if (!isActive) {
+        searchInput.classList.add('active');
+        searchInput.focus();
+        return;
+      }
+
+      if (searchInput.value.trim()) {
+        searchInput.value = '';
+        searchQuery = '';
+        searchBtn.title = 'Search Reminders';
+        renderTasks();
+        return;
+      }
+
+      searchInput.classList.remove('active');
     });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      searchQuery = searchInput.value.trim().toLowerCase();
+      searchBtn.title = searchQuery ? `Searching: ${searchQuery}` : 'Search Reminders';
+      renderTasks();
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        searchInput.value = '';
+        searchQuery = '';
+        searchInput.classList.remove('active');
+        searchBtn.title = 'Search Reminders';
+        renderTasks();
+      }
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === '/' && searchInput) {
+      const targetTag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+      if (targetTag === 'input' || targetTag === 'textarea') return;
+      e.preventDefault();
+      searchInput.classList.add('active');
+      searchInput.focus();
+    }
+  });
+
+  if (clearCompletedBtn) {
+    clearCompletedBtn.addEventListener('click', clearCompletedTasks);
   }
 
   addTaskBtn.addEventListener('click', () => taskInput.focus());
 
   addListBtn.addEventListener('click', () => {
-    const name = prompt('List name', 'New List');
-    if (!name) return;
-    createList(name.trim() || 'New List');
+    createList(generateListName());
   });
 
   taskInput.addEventListener('keypress', (e) => {
@@ -131,6 +202,89 @@ function createList(name) {
   renderTasks();
 }
 
+function generateListName() {
+  const base = 'New List';
+  const existingNames = new Set(state.lists.map((list) => String(list.name || '').toLowerCase()));
+
+  if (!existingNames.has(base.toLowerCase())) {
+    return base;
+  }
+
+  let counter = 2;
+  while (existingNames.has(`${base} ${counter}`.toLowerCase())) {
+    counter += 1;
+  }
+
+  return `${base} ${counter}`;
+}
+
+function startInlineRename(listId, nameElement) {
+  const originalText = nameElement.textContent;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = originalText;
+  input.className = 'search-input active';
+  input.style.width = '100%';
+
+  const parent = nameElement.parentElement;
+  parent.replaceChild(input, nameElement);
+  input.focus();
+  input.select();
+
+  const commit = () => {
+    const nextName = input.value.trim() || originalText;
+    renameList(listId, nextName);
+  };
+
+  input.addEventListener('blur', commit, { once: true });
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      input.blur();
+    }
+    if (event.key === 'Escape') {
+      input.value = originalText;
+      input.blur();
+    }
+  });
+}
+
+function renameList(listId, nextName) {
+  const list = state.lists.find((item) => item.id === listId);
+  if (!list) return;
+  list.name = nextName;
+  saveState();
+  renderLists();
+  renderTasks();
+}
+
+function deleteList(listId) {
+  if (state.lists.length === 1) {
+    state.lists[0] = { id: generateId(), name: 'Reminders', tasks: [] };
+    state.selectedListId = state.lists[0].id;
+    saveState();
+    renderLists();
+    renderTasks();
+    return;
+  }
+
+  state.lists = state.lists.filter((list) => list.id !== listId);
+  if (state.selectedListId === listId) {
+    state.selectedListId = state.lists[0]?.id || null;
+  }
+  saveState();
+  renderLists();
+  renderTasks();
+}
+
+function clearCompletedTasks() {
+  const list = getSelectedList();
+  if (!list) return;
+
+  list.tasks = list.tasks.filter((task) => !task.completed);
+  saveState();
+  renderTasks();
+}
+
 function selectList(listId) {
   state.selectedListId = listId;
   saveState();
@@ -158,9 +312,25 @@ function renderLists() {
     const name = document.createElement('span');
     name.className = 'list-name';
     name.textContent = list.name;
+    name.title = 'Double-click to rename';
+
+    name.addEventListener('dblclick', (event) => {
+      event.stopPropagation();
+      startInlineRename(list.id, name);
+    });
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'list-delete-btn';
+    deleteBtn.textContent = '✕';
+    deleteBtn.title = 'Delete list';
+    deleteBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      deleteList(list.id);
+    });
 
     li.appendChild(icon);
     li.appendChild(name);
+    li.appendChild(deleteBtn);
 
     li.addEventListener('click', () => {
       if (state.selectedListId === list.id) return;
@@ -192,12 +362,26 @@ function renderTasks() {
 
   taskListElement.innerHTML = '';
 
-  const items = buildTaskTree(list.tasks);
+  let visibleTasks = list.tasks;
+  if (searchQuery) {
+    visibleTasks = list.tasks.filter((task) =>
+      String(task.text || '').toLowerCase().includes(searchQuery)
+    );
+  }
+
+  const items = buildTaskTree(visibleTasks);
+  if (items.length === 0) {
+    const emptyItem = document.createElement('li');
+    emptyItem.className = 'task-item empty-state';
+    emptyItem.textContent = searchQuery ? 'No reminders match your search.' : 'No reminders yet. Add one below.';
+    taskListElement.appendChild(emptyItem);
+  }
+
   items.forEach((item) => {
     taskListElement.appendChild(createTaskElement(item, item._depth));
   });
 
-  updateTaskCount();
+  updateTaskCount(visibleTasks.length);
 }
 
 function buildTaskTree(tasks) {
@@ -399,23 +583,70 @@ function moveTaskToList(taskId, destinationListId) {
   renderTasks();
 }
 
-function updateTaskCount() {
+function updateTaskCount(totalOverride) {
   const list = getSelectedList();
-  const total = list ? list.tasks.length : 0;
+  const total = Number.isInteger(totalOverride)
+    ? totalOverride
+    : (list ? list.tasks.length : 0);
   taskCount.textContent = total;
 }
 
 async function saveState() {
-  const userDoc = doc(db, 'users', 'defaultUser');
-  await setDoc(userDoc, { state }, { merge: true });
+  saveLocalState();
+
+  try {
+    if (!db) return;
+    const userDoc = doc(db, 'users', 'defaultUser');
+    await setDoc(userDoc, { state }, { merge: true });
+  } catch (error) {
+    console.warn('Cloud save skipped:', error?.message || error);
+  }
 }
 
 async function loadState() {
-  const userDoc = doc(db, 'users', 'defaultUser');
-  const docSnap = await getDoc(userDoc);
-  if (docSnap.exists()) {
-    state = docSnap.data().state || { lists: [], selectedListId: null };
+  const localLoaded = loadLocalState();
+
+  try {
+    if (!db) return;
+    const userDoc = doc(db, 'users', 'defaultUser');
+    const docSnap = await getDoc(userDoc);
+    if (docSnap.exists()) {
+      state = docSnap.data().state || { lists: [], selectedListId: null };
+      saveLocalState();
+    }
+  } catch (error) {
+    console.warn('Cloud load skipped:', error?.message || error);
+    if (!localLoaded) {
+      state = { lists: [], selectedListId: null };
+    }
   }
+}
+
+function saveLocalState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (error) {
+    console.warn('Local save skipped:', error?.message || error);
+  }
+}
+
+function loadLocalState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    if (parsed && Array.isArray(parsed.lists)) {
+      state = {
+        lists: parsed.lists,
+        selectedListId: parsed.selectedListId || null,
+      };
+      return true;
+    }
+  } catch (error) {
+    console.warn('Local load skipped:', error?.message || error);
+  }
+
+  return false;
 }
 
 function generateId() {
