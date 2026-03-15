@@ -363,7 +363,6 @@ function setupRealtimeListener() {
   function generateId() {
     return 'id-' + Math.random().toString(16).slice(2) + Date.now();
   }
-});
 
 // Start the app
 document.addEventListener('DOMContentLoaded', async () => {
