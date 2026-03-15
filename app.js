@@ -175,11 +175,15 @@ function renderTasks() {
   currentListName.textContent = list.name;
   taskListTitle.textContent = list.name;
 
-  taskListEl.innerHTML = '';
+  // Ensure we have a reference to the task list element (fallback if it wasn't initialized)
+  const taskListElement = taskListEl || document.getElementById('taskList');
+  if (!taskListElement) return;
+
+  taskListElement.innerHTML = '';
 
   const items = buildTaskTree(list.tasks);
   items.forEach((item) => {
-    taskListEl.appendChild(createTaskElement(item, item._depth));
+    taskListElement.appendChild(createTaskElement(item, item._depth));
   });
 
   updateTaskCount();
