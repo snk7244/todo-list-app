@@ -1,43 +1,52 @@
-﻿// iOS Reminders-style To-Do List Application with Lists + Subtasks
+﻿// iOS Reminders-style To-Do List Application with Lists + Subtasks + Cloud Sync
 
-document.addEventListener('DOMContentLoaded', () => {
-  const taskInput = document.getElementById('taskInput');
-  const taskListEl = document.getElementById('taskList');
-  const listContainer = document.getElementById('listContainer');
-  const taskCount = document.getElementById('taskCount');
-  const currentListName = document.getElementById('currentListName');
-  const taskListTitle = document.getElementById('taskListTitle');
-  const addTaskBtn = document.getElementById('addTaskBtn');
-  const addListBtn = document.getElementById('addListBtn');
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
-  const STORAGE_KEY = 'todoState';
+const db = window.db; // From HTML
+const STORAGE_KEY = 'todoState';
 
-  let state = {
-    lists: [],
-    selectedListId: null,
-  };
+let state = {
+  lists: [],
+  selectedListId: null,
+};
 
-  init();
+let unsubscribe = null; // For real-time listener
 
-  function init() {
-    loadState();
+async function init() {
+  await loadState();
 
-    if (state.lists.length === 0) {
-      const defaultId = generateId();
-      state.lists.push({ id: defaultId, name: 'Reminders', tasks: [] });
-      state.selectedListId = defaultId;
-      saveState();
-    }
-
-    if (!state.selectedListId && state.lists.length > 0) {
-      state.selectedListId = state.lists[0].id;
-      saveState();
-    }
-
-    renderLists();
-    renderTasks();
-    attachEvents();
+  if (state.lists.length === 0) {
+    const defaultId = generateId();
+    state.lists.push({ id: defaultId, name: 'Reminders', tasks: [] });
+    state.selectedListId = defaultId;
+    await saveState();
   }
+
+  if (!state.selectedListId && state.lists.length > 0) {
+    state.selectedListId = state.lists[0].id;
+    await saveState();
+  }
+
+  renderLists();
+  renderTasks();
+  attachEvents();
+
+  // Set up real-time listener
+  setupRealtimeListener();
+}
+
+function setupRealtimeListener() {
+  if (unsubscribe) unsubscribe();
+  const userDoc = doc(db, 'users', 'defaultUser'); // Use a fixed user ID for simplicity
+  unsubscribe = onSnapshot(userDoc, (docSnap) => {
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      state = data.state || { lists: [], selectedListId: null };
+      renderLists();
+      renderTasks();
+    }
+  });
+}
 
   function attachEvents() {
     addTaskBtn.addEventListener('click', () => taskInput.focus());
@@ -55,23 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
     taskInput.addEventListener('blur', () => {
       if (taskInput.value.trim() !== '') addTask();
     });
-  }
-
-  function createList(name) {
-    const id = generateId();
-    state.lists.push({ id, name, tasks: [] });
-    state.selectedListId = id;
-    saveState();
-    renderLists();
-    renderTasks();
-    taskInput.focus();
-  }
-
-  function selectList(id) {
-    state.selectedListId = id;
-    saveState();
-    renderLists();
-    renderTasks();
   }
 
   function addTask() {
@@ -355,49 +347,25 @@ document.addEventListener('DOMContentLoaded', () => {
     taskCount.textContent = total;
   }
 
-  function saveState() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  async function saveState() {
+    const userDoc = doc(db, 'users', 'defaultUser');
+    await setDoc(userDoc, { state }, { merge: true });
   }
 
-  function loadState() {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return;
-
-    try {
-      const parsed = JSON.parse(stored);
-
-      // Migrate from old single-list format (array of tasks) to new list-based format
-      if (Array.isArray(parsed)) {
-        state = {
-          lists: [
-            {
-              id: generateId(),
-              name: 'Reminders',
-              tasks: parsed.map((task) => ({
-                id: generateId(),
-                text: task.text || task,
-                completed: task.completed || false,
-                parentId: null,
-              })),
-            },
-          ],
-          selectedListId: null,
-        };
-        return;
-      }
-
-      if (parsed && Array.isArray(parsed.lists)) {
-        state = parsed;
-        return;
-      }
-
-      // If stored data is malformed, fallback to defaults (will be re-saved on init)
-    } catch (e) {
-      console.warn('Failed to parse stored state', e);
+  async function loadState() {
+    const userDoc = doc(db, 'users', 'defaultUser');
+    const docSnap = await getDoc(userDoc);
+    if (docSnap.exists()) {
+      state = docSnap.data().state || { lists: [], selectedListId: null };
     }
   }
 
   function generateId() {
     return 'id-' + Math.random().toString(16).slice(2) + Date.now();
   }
+});
+
+// Start the app
+document.addEventListener('DOMContentLoaded', async () => {
+  await init();
 });

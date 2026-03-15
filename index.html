@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reminders</title>
     <link rel="stylesheet" href="styles.css" />
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+      import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+      // Your Firebase config (replace with your own)
+  const firebaseConfig = {
+  apiKey: "AIzaSyAJ3HSgUZz7BVgmmurBomasQ5XhEwgGVQE",
+  authDomain: "to-do-sync-app-snk.firebaseapp.com",
+  projectId: "to-do-sync-app-snk",
+  storageBucket: "to-do-sync-app-snk.firebasestorage.app",
+  messagingSenderId: "657256345359",
+  appId: "1:657256345359:web:382b92666272b08ed0587a"
+};
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      window.db = getFirestore(app);
+    </script>
   </head>
   <body>
     <div class="app-container">
